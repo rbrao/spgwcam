@@ -12,8 +12,8 @@ $out =~ s/\t//g;
 my ($serialno, $uuid) = split(/\n/, $out);
 
 my $fh = stat($folder);
-my $ctime = "Created: " . scalar localtime $fh->ctime;
+my $size = "Size: " . $fh->size;
 my $atime = "Last Accessed: " . scalar localtime $fh->atime;
 my $mtime = "Last Modified: " . scalar localtime $fh->mtime;
 
-print "$timestamp_precision,$folder,$ctime,$atime,$mtime,$uuid,$serialno\n";
+print "$timestamp_precision,$folder,$size,$atime,$mtime,$uuid,$serialno\n";
