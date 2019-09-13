@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+#Author: SPOGWorks Inc.
+#
+use File::stat;
+
+our $folder = $ARGV[0];
+our $timestamp_precision = qx(date -u +%Y-%m-%d'_'%H:%M:%S); chomp($timestamp_precision);
+our $timestamp = substr($timestamp_precision, 0, 10);
+
+my $out = qx(sudo dmidecode -t system|egrep 'Serial Number:|UUID');	chomp($out);
+$out =~ s/\t//g;
+my ($serialno, $uuid) = split(/\n/, $out);
+
+my $fh = stat($folder);
+my $ctime = "Created: " . scalar localtime $fh->ctime;
+my $atime = "Last Accessed: " . scalar localtime $fh->atime;
+my $mtime = "Last Modified: " . scalar localtime $fh->mtime;
+
+print "$timestamp_precision,$folder,$ctime,$atime,$mtime,$uuid,$serialno\n";
