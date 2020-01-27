@@ -2,18 +2,42 @@
 #Author: SPOGWorks Inc.
 #
 use File::stat;
+use File::Find;
 
 our $folder = $ARGV[0];
 our $timestamp_precision = qx(date -u +%Y-%m-%d'_'%H:%M:%S); chomp($timestamp_precision);
 our $timestamp = substr($timestamp_precision, 0, 10);
+our %file_atime;
 
-my $out = qx(sudo dmidecode -t system|egrep 'Serial Number:|UUID');	chomp($out);
-$out =~ s/\t//g;
-my ($serialno, $uuid) = split(/\n/, $out);
+my ($serialno, $uuid) = &getsysinfo();
+#my ($size, $atime, $mtime) = &getfilestats();
+find(\&getfilestats, @ARGV);
 
-my $fh = stat($folder);
-my $size = "Size: " . $fh->size;
-my $atime = "Last Accessed: " . scalar localtime $fh->atime;
-my $mtime = "Last Modified: " . scalar localtime $fh->mtime;
+#print "$timestamp_precision,$folder,$size,$atime,$mtime,$uuid,$serialno\n";
+foreach my $one (sort keys %file_atime) {
+	print "$one - $file_atime{$one}\n";
+}
 
-print "$timestamp_precision,$folder,$size,$atime,$mtime,$uuid,$serialno\n";
+sub getfilestats_pretty {
+	my $fh = stat($_);
+	my $size = "Size: " . $fh->size;
+	my $atime = "Last Accessed: " . scalar localtime $fh->atime;
+	my $mtime = "Last Modified: " . scalar localtime $fh->mtime;
+	print "$_: $size, $atime, $mtime\n";
+}
+
+sub getfilestats {
+	my $filename = $_;
+	my $fh = stat($filename);
+	$file_atime{$filename} = $fh->atime;
+#	my $size = $fh->size;
+#	my $atime = $fh->atime;
+#	my $mtime = $fh->mtime;
+}
+
+sub getsysinfo {
+	my $out = qx(sudo dmidecode -t system|egrep 'Serial Number:|UUID');	chomp($out);
+	$out =~ s/\t//g;
+	return( split(/\n/, $out) );
+}
+
